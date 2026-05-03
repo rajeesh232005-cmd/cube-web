@@ -895,32 +895,32 @@
                                 <i data-lucide="bar-chart-2" class="w-5 h-5 text-apple-400"></i>
                                 Project Categories
                             </h3>
-                            <div class="space-y-4">
+                            <div class="space-y-4" id="categoryChart">
                                 <div>
                                     <div class="flex justify-between text-sm mb-1">
                                         <span class="text-apple-600">Residential</span>
-                                        <span class="text-apple-800 font-medium">45%</span>
+                                        <span class="text-apple-800 font-medium" id="pctResidential">0%</span>
                                     </div>
                                     <div class="w-full bg-apple-100 rounded-full h-2">
-                                        <div class="bg-cube-700 h-2 rounded-full transition-all duration-1000" style="width: 45%"></div>
+                                        <div class="bg-cube-700 h-2 rounded-full transition-all duration-1000" id="barResidential" style="width: 0%"></div>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="flex justify-between text-sm mb-1">
                                         <span class="text-apple-600">Commercial</span>
-                                        <span class="text-apple-800 font-medium">30%</span>
+                                        <span class="text-apple-800 font-medium" id="pctCommercial">0%</span>
                                     </div>
                                     <div class="w-full bg-apple-100 rounded-full h-2">
-                                        <div class="bg-cube-gold h-2 rounded-full transition-all duration-1000" style="width: 30%"></div>
+                                        <div class="bg-cube-gold h-2 rounded-full transition-all duration-1000" id="barCommercial" style="width: 0%"></div>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="flex justify-between text-sm mb-1">
                                         <span class="text-apple-600">Kitchen</span>
-                                        <span class="text-apple-800 font-medium">25%</span>
+                                        <span class="text-apple-800 font-medium" id="pctKitchen">0%</span>
                                     </div>
                                     <div class="w-full bg-apple-100 rounded-full h-2">
-                                        <div class="bg-cube-700 h-2 rounded-full transition-all duration-1000" style="width: 25%"></div>
+                                        <div class="bg-cube-700 h-2 rounded-full transition-all duration-1000" id="barKitchen" style="width: 0%"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1245,6 +1245,17 @@
                         badge.classList.add('hidden');
                     }
                 }
+                // Update category chart with real data
+                const total = store.projects.length;
+                const cats = { residential: 0, commercial: 0, kitchen: 0 };
+                store.projects.forEach(p => { if (cats[p.category] !== undefined) cats[p.category]++; });
+                ['residential', 'commercial', 'kitchen'].forEach(cat => {
+                    const pct = total > 0 ? Math.round((cats[cat] / total) * 100) : 0;
+                    const pctEl = document.getElementById('pct' + cat.charAt(0).toUpperCase() + cat.slice(1));
+                    const barEl = document.getElementById('bar' + cat.charAt(0).toUpperCase() + cat.slice(1));
+                    if (pctEl) pctEl.textContent = pct + '%';
+                    if (barEl) barEl.style.width = pct + '%';
+                });
             }
         };
 
