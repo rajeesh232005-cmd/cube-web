@@ -79,6 +79,25 @@
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
         }
+
+        /* Navbar always gold to match logo */
+        #navbar {
+            background: #C8922A !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+        }
+        #navbar a, #navbar .nav-link {
+            color: #fff !important;
+        }
+        #navbar .nav-link::after {
+            background: #fff !important;
+        }
+        #navbar button i {
+            color: #fff !important;
+        }
+        #navbar #mobileMenu {
+            background: #C8922A !important;
+            border-color: rgba(255,255,255,0.2) !important;
+        }
         
         .glass-dark {
             background: rgba(29, 29, 31, 0.85);
@@ -651,13 +670,7 @@
                 <div class="grid md:grid-cols-4 gap-12 mb-12">
                     <div class="md:col-span-2">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-                                <span class="text-apple-800 font-bold text-xl">C</span>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="font-bold text-xl tracking-tight leading-none">CUBE</span>
-                                <span class="text-[10px] text-apple-300 tracking-[0.2em] uppercase leading-none mt-0.5">Innovative Interior</span>
-                            </div>
+                            <img src="https://cdn.tailwindcss.com" alt="CUBE Logo" style="height:48px;width:auto;object-fit:contain;filter:brightness(0) invert(1);">
                         </div>
                         <p class="text-apple-300 max-w-sm leading-relaxed mb-4">
                             Innovative interior solutions for homes and commercial spaces across Ulikkal, Kannur, and surrounding areas in Kerala.
@@ -1100,102 +1113,90 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Data Store
+        // Default Data
+        const defaultProjects = [
+            {
+                id: 1,
+                title: "Modern Villa Ulikkal",
+                category: "residential",
+                description: "A stunning modern villa in Ulikkal featuring open-plan living spaces, premium Italian marble flooring, custom modular kitchen, and smart home integration.",
+                location: "Ulikkal, Kannur",
+                year: "2024",
+                image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
+                status: "published"
+            },
+            {
+                id: 2,
+                title: "Cozy Apartment Kannur",
+                category: "residential",
+                description: "Complete interior transformation of a 3BHK apartment in Kannur city. Features warm wood tones, space-saving furniture, and a beautiful pooja room design.",
+                location: "Kannur, Kerala",
+                year: "2024",
+                image: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&h=600&fit=crop",
+                status: "published"
+            },
+            {
+                id: 3,
+                title: "Premium Modular Kitchen",
+                category: "kitchen",
+                description: "A state-of-the-art modular kitchen designed for a client in Ulikkal. Features soft-close cabinets, quartz countertops, and integrated appliances.",
+                location: "Ulikkal, Kannur",
+                year: "2024",
+                image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+                status: "published"
+            },
+            {
+                id: 4,
+                title: "CUBE Office Space",
+                category: "commercial",
+                description: "A 2,500 sq ft commercial office interior for a tech startup in Kannur. Features collaborative workspaces, soundproof meeting rooms, and biophilic design.",
+                location: "Kannur, Kerala",
+                year: "2023",
+                image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop",
+                status: "published"
+            },
+            {
+                id: 5,
+                title: "Traditional Kerala Home",
+                category: "residential",
+                description: "Renovation of a traditional Kerala nalukettu-style home in Ulikkal. Preserved the original wooden architecture while adding modern amenities.",
+                location: "Ulikkal, Kannur",
+                year: "2023",
+                image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=600&fit=crop",
+                status: "published"
+            },
+            {
+                id: 6,
+                title: "Designer Kitchen & Dining",
+                category: "kitchen",
+                description: "An open-concept kitchen and dining area designed for a family in Kannur. Features a large island with waterfall countertops and custom crockery unit.",
+                location: "Kannur, Kerala",
+                year: "2024",
+                image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=600&fit=crop",
+                status: "published"
+            }
+        ];
+
+        // localStorage helpers
+        function saveToStorage() {
+            localStorage.setItem('cube_projects', JSON.stringify(store.projects));
+            localStorage.setItem('cube_messages', JSON.stringify(store.messages));
+        }
+
+        function loadFromStorage() {
+            const savedProjects = localStorage.getItem('cube_projects');
+            const savedMessages = localStorage.getItem('cube_messages');
+            return {
+                projects: savedProjects ? JSON.parse(savedProjects) : defaultProjects,
+                messages: savedMessages ? JSON.parse(savedMessages) : []
+            };
+        }
+
+        // Data Store — loads from localStorage on every page load
+        const saved = loadFromStorage();
         const store = {
-            projects: [
-                {
-                    id: 1,
-                    title: "Modern Villa Ulikkal",
-                    category: "residential",
-                    description: "A stunning modern villa in Ulikkal featuring open-plan living spaces, premium Italian marble flooring, custom modular kitchen, and smart home integration. The design maximizes natural ventilation and Kerala's tropical climate.",
-                    location: "Ulikkal, Kannur",
-                    year: "2024",
-                    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
-                    status: "published"
-                },
-                {
-                    id: 2,
-                    title: "Cozy Apartment Kannur",
-                    category: "residential",
-                    description: "Complete interior transformation of a 3BHK apartment in Kannur city. Features warm wood tones, space-saving furniture, and a beautiful pooja room design that blends tradition with modern aesthetics.",
-                    location: "Kannur, Kerala",
-                    year: "2024",
-                    image: "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&h=600&fit=crop",
-                    status: "published"
-                },
-                {
-                    id: 3,
-                    title: "Premium Modular Kitchen",
-                    category: "kitchen",
-                    description: "A state-of-the-art modular kitchen designed for a client in Ulikkal. Features soft-close cabinets, quartz countertops, integrated appliances, and a breakfast counter. The color palette combines navy blue with warm brass accents.",
-                    location: "Ulikkal, Kannur",
-                    year: "2024",
-                    image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
-                    status: "published"
-                },
-                {
-                    id: 4,
-                    title: "CUBE Office Space",
-                    category: "commercial",
-                    description: "A 2,500 sq ft commercial office interior for a tech startup in Kannur. Features collaborative workspaces, soundproof meeting rooms, biophilic design with indoor plants, and ergonomic furniture throughout.",
-                    location: "Kannur, Kerala",
-                    year: "2023",
-                    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop",
-                    status: "published"
-                },
-                {
-                    id: 5,
-                    title: "Traditional Kerala Home",
-                    category: "residential",
-                    description: "Renovation of a traditional Kerala nalukettu-style home in Ulikkal. Preserved the original wooden architecture while adding modern amenities, contemporary bathrooms, and a redesigned courtyard with traditional elements.",
-                    location: "Ulikkal, Kannur",
-                    year: "2023",
-                    image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=600&fit=crop",
-                    status: "published"
-                },
-                {
-                    id: 6,
-                    title: "Designer Kitchen & Dining",
-                    category: "kitchen",
-                    description: "An open-concept kitchen and dining area designed for a family in Kannur. Features a large island with waterfall countertops, custom crockery unit, pendant lighting, and seamless flow into the living area.",
-                    location: "Kannur, Kerala",
-                    year: "2024",
-                    image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=600&fit=crop",
-                    status: "published"
-                }
-            ],
-            messages: [
-                {
-                    id: 1,
-                    name: "Rahul Menon",
-                    email: "rahul.menon@email.com",
-                    phone: "+91 98765 43210",
-                    serviceType: "Residential Interior",
-                    message: "Hi, I'm looking to renovate my 3BHK apartment in Kannur. Would like to get a quote for complete interior work including modular kitchen. Please contact me.",
-                    date: "2024-05-01T10:30:00",
-                    read: false
-                },
-                {
-                    id: 2,
-                    name: "Priya Nair",
-                    email: "priya.nair@gmail.com",
-                    phone: "+91 87654 32109",
-                    serviceType: "Modular Kitchen",
-                    message: "Interested in getting a modular kitchen designed for my new home in Ulikkal. Budget is around 3-4 lakhs. Can we schedule a site visit?",
-                    date: "2024-04-28T14:15:00",
-                    read: true
-                },
-                {
-                    id: 3,
-                    name: "Anil Kumar",
-                    email: "anil.k@business.com",
-                    phone: "+91 76543 21098",
-                    serviceType: "Commercial Interior",
-                    message: "Planning to set up a new retail store in Kannur town. Need complete interior design and execution. Around 1500 sq ft space.",
-                    date: "2024-04-25T09:00:00",
-                    read: true
-                }
-            ],
+            projects: saved.projects,
+            messages: saved.messages,
             currentUser: null,
             currentFilter: 'all'
         };
@@ -1267,15 +1268,7 @@
             overlay.classList.toggle('hidden');
         }
 
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                nav.classList.add('glass', 'border-b', 'border-apple-200/50');
-            } else {
-                nav.classList.remove('glass', 'border-b', 'border-apple-200/50');
-            }
-        });
+        // Navbar scroll effect removed — permanent gold background
 
         // Projects
         function renderProjects(filter = 'all') {
@@ -1358,7 +1351,7 @@
                 date: new Date().toISOString(),
                 read: false
             });
-            
+            saveToStorage();
             showToast('Message sent successfully! We will contact you soon.', 'success');
             e.target.reset();
             router.updateDashboard();
@@ -1477,6 +1470,7 @@
         function deleteProject(id) {
             if (confirm('Are you sure you want to delete this project?')) {
                 store.projects = store.projects.filter(p => p.id !== id);
+                saveToStorage();
                 renderProjectsTable();
                 renderProjects(store.currentFilter);
                 router.updateDashboard();
@@ -1536,6 +1530,7 @@
             };
             
             store.projects.unshift(newProject);
+            saveToStorage();
             renderProjects(store.currentFilter);
             router.updateDashboard();
             
@@ -1606,6 +1601,7 @@
         function deleteMessage(id) {
             if (confirm('Delete this message?')) {
                 store.messages = store.messages.filter(m => m.id !== id);
+                saveToStorage();
                 renderMessages();
                 router.updateDashboard();
             }
