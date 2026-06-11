@@ -756,18 +756,7 @@
                             <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(13,13,13,0.6) 0%,transparent 50%);border-radius:28px"></div>
                         </div>
 
-                        <!-- Floating card -->
-                        <div style="position:absolute;bottom:24px;left:24px;background:rgba(13,13,13,0.9);backdrop-filter:blur(20px);border:1px solid rgba(200,146,42,0.25);border-radius:18px;padding:16px 20px;z-index:2">
-                            <div style="display:flex;align-items:center;gap:12px">
-                                <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#C8922A,#E8B84B);display:flex;align-items:center;justify-content:center">
-                                    <i data-lucide="award" style="width:20px;height:20px;color:#0D0D0D"></i>
-                                </div>
-                                <div>
-                                    <div style="color:#fff;font-weight:700;font-size:15px">Award-Winning</div>
-                                    <div style="color:rgba(255,255,255,0.5);font-size:12px">Interior Studio</div>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Floating rating card -->
                         <div style="position:absolute;top:24px;right:24px;background:rgba(13,13,13,0.9);backdrop-filter:blur(20px);border:1px solid rgba(200,146,42,0.2);border-radius:18px;padding:14px 18px;z-index:2">
@@ -1168,7 +1157,7 @@
 
                 <div style="border-top:1px solid rgba(200,146,42,0.12);padding-top:28px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
                     <p style="color:rgba(255,255,255,0.3);font-size:14px">© 2024 CUBE Innovative Interior Solution. All rights reserved.</p>
-                    <p style="color:rgba(200,146,42,0.5);font-size:13px">Designed with ✦ in Kerala</p>
+
                 </div>
             </div>
         </footer>
@@ -1390,7 +1379,7 @@
 
                 <!-- Add Project -->
                 <div id="section-add-project" class="admin-section hidden">
-                    <h1 class="font-serif text-3xl font-bold mb-8" style="color:#0D0D0D">Add New Project</h1>
+                    <h1 id="addProjectFormTitle" class="font-serif text-3xl font-bold mb-8" style="color:#0D0D0D">Add New Project</h1>
                     <div style="max-width:700px;background:#fff;border-radius:20px;padding:32px;border:1px solid #E8E5E0">
                         <form id="addProjectForm" onsubmit="handleAddProject(event)" class="space-y-5">
                             <div class="grid md:grid-cols-2 gap-5">
@@ -1433,10 +1422,10 @@
                                 </div>
                             </div>
                             <div style="display:flex;gap:12px;padding-top:8px">
-                                <button type="submit" class="btn-teal" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:12px">
+                                <button type="submit" id="addProjectSubmitBtn" class="btn-teal" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:12px">
                                     <i data-lucide="save" class="w-4 h-4"></i> Save Project
                                 </button>
-                                <button type="button" onclick="showAdminSection('projects')" style="display:inline-flex;align-items:center;padding:12px 28px;border-radius:12px;background:#f5f5f5;color:#6B6B6B;font-weight:500;border:none;cursor:pointer;transition:all 0.2s"
+                                <button type="button" onclick="cancelEditProject()" style="display:inline-flex;align-items:center;padding:12px 28px;border-radius:12px;background:#f5f5f5;color:#6B6B6B;font-weight:500;border:none;cursor:pointer;transition:all 0.2s"
                                         onmouseover="this.style.background='#E8E5E0'"
                                         onmouseout="this.style.background='#f5f5f5'">
                                     Cancel
@@ -1533,14 +1522,13 @@
         // ─── INIT LUCIDE ───
         lucide.createIcons();
 
-        // ─── DEFAULT DATA ───
-        const defaultProjects = [
-            { id:1, title:"Modern Villa Ulikkal", category:"residential", description:"A stunning modern villa in Ulikkal featuring open-plan living spaces, premium Italian marble flooring, custom modular kitchen, and smart home integration.", location:"Ulikkal, Kannur", year:"2024", image:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop", status:"published" },
-            { id:2, title:"Cozy Apartment Kannur", category:"residential", description:"Complete interior transformation of a 3BHK apartment in Kannur city. Features warm wood tones, space-saving furniture, and a beautiful pooja room design.", location:"Kannur, Kerala", year:"2024", image:"https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&h=600&fit=crop", status:"published" },
-            { id:3, title:"Premium Modular Kitchen", category:"kitchen", description:"A state-of-the-art modular kitchen designed for a client in Ulikkal. Features soft-close cabinets, quartz countertops, and integrated appliances.", location:"Ulikkal, Kannur", year:"2024", image:"https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop", status:"published" },
-            { id:4, title:"CUBE Office Space", category:"commercial", description:"A 2,500 sq ft commercial office interior for a tech startup in Kannur. Features collaborative workspaces, soundproof meeting rooms, and biophilic design.", location:"Kannur, Kerala", year:"2023", image:"https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop", status:"published" },
-            { id:5, title:"Traditional Kerala Home", category:"residential", description:"Renovation of a traditional Kerala nalukettu-style home in Ulikkal. Preserved the original wooden architecture while adding modern amenities.", location:"Ulikkal, Kannur", year:"2023", image:"https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=600&fit=crop", status:"published" },
-            { id:6, title:"Designer Kitchen & Dining", category:"kitchen", description:"An open-concept kitchen and dining area designed for a family in Kannur. Features a large island with waterfall countertops and custom crockery unit.", location:"Kannur, Kerala", year:"2024", image:"https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=600&fit=crop", status:"published" }
+        // ─── DATA ───
+        // Projects are stored permanently in this array.
+        // To add/edit/delete projects permanently for ALL visitors,
+        // edit this array and push to Vercel.
+        const permanentProjects = [
+            // Add your real projects here. Example format:
+            // { id:1, title:"Project Name", category:"residential", description:"...", location:"Ulikkal, Kannur", year:"2024", image:"https://...", status:"published" },
         ];
 
         // ─── STORAGE ───
@@ -1551,10 +1539,11 @@
         function loadFromStorage() {
             const p = localStorage.getItem('cube_projects');
             const m = localStorage.getItem('cube_messages');
-            return { projects: p ? JSON.parse(p) : defaultProjects, messages: m ? JSON.parse(m) : [] };
+            // Use localStorage if available, otherwise use permanent projects
+            return { projects: p ? JSON.parse(p) : [...permanentProjects], messages: m ? JSON.parse(m) : [] };
         }
         const saved = loadFromStorage();
-        const store = { projects: saved.projects, messages: saved.messages, currentUser: null, currentFilter: 'all' };
+        const store = { projects: saved.projects, messages: saved.messages, currentUser: null, currentFilter: 'all', editingProjectId: null };
 
         // ─── ROUTER ───
         const router = {
@@ -1775,6 +1764,10 @@
 
         function renderProjectsTable() {
             const tbody = document.getElementById('projectsTableBody');
+            if (store.projects.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding:40px 20px;text-align:center;color:#A0A0A0;font-size:15px">No projects yet. Click "Add New Project" to create your first project.</td></tr>`;
+                return;
+            }
             tbody.innerHTML = store.projects.map(p => `
                 <tr style="border-bottom:1px solid #E8E5E0;transition:background 0.2s" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background=''">
                     <td style="padding:14px 20px">
@@ -1796,9 +1789,14 @@
                         </span>
                     </td>
                     <td style="padding:14px 20px;text-align:right">
-                        <button onclick="deleteProject(${p.id})" style="padding:8px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='#fef2f2';this.querySelector('i').style.color='#ef4444'" onmouseout="this.style.background='transparent';this.querySelector('i').style.color='#A0A0A0'">
-                            <i data-lucide="trash-2" style="width:16px;height:16px;color:#A0A0A0"></i>
-                        </button>
+                        <div style="display:flex;justify-content:flex-end;gap:4px">
+                            <button onclick="editProject(${p.id})" style="padding:8px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='#f0f5ff';this.querySelector('i').style.color='#3b82f6'" onmouseout="this.style.background='transparent';this.querySelector('i').style.color='#A0A0A0'" title="Edit project">
+                                <i data-lucide="pencil" style="width:16px;height:16px;color:#A0A0A0"></i>
+                            </button>
+                            <button onclick="deleteProject(${p.id})" style="padding:8px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='#fef2f2';this.querySelector('i').style.color='#ef4444'" onmouseout="this.style.background='transparent';this.querySelector('i').style.color='#A0A0A0'" title="Delete project">
+                                <i data-lucide="trash-2" style="width:16px;height:16px;color:#A0A0A0"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -1835,6 +1833,39 @@
             }
         }
 
+        function editProject(id) {
+            const project = store.projects.find(p => p.id === id);
+            if (!project) return;
+            store.editingProjectId = id;
+            // Fill form with project data
+            document.getElementById('projTitle').value = project.title;
+            document.getElementById('projCategory').value = project.category;
+            document.getElementById('projDesc').value = project.description;
+            document.getElementById('projLocation').value = project.location;
+            // Update form UI for edit mode
+            document.getElementById('addProjectFormTitle').textContent = 'Edit Project';
+            document.getElementById('addProjectSubmitBtn').innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Update Project';
+            // Show image preview if project has an image
+            if (project.image) {
+                document.getElementById('imagePreview').src = project.image;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                document.getElementById('uploadPlaceholder').classList.add('hidden');
+            }
+            showAdminSection('add-project');
+            lucide.createIcons();
+        }
+
+        function cancelEditProject() {
+            store.editingProjectId = null;
+            document.getElementById('addProjectForm').reset();
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('addProjectFormTitle').textContent = 'Add New Project';
+            document.getElementById('addProjectSubmitBtn').innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Save Project';
+            lucide.createIcons();
+            showAdminSection('projects');
+        }
+
         function handleAddProject(e) {
             e.preventDefault();
             const title = document.getElementById('projTitle').value;
@@ -1842,26 +1873,56 @@
             const description = document.getElementById('projDesc').value;
             const location = document.getElementById('projLocation').value || 'Ulikkal, Kannur';
             const imageInput = document.getElementById('projImage');
-            let image = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop';
-            if (imageInput.files && imageInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = evt => { image = evt.target.result; saveProject({title,category,description,location,image}); };
-                reader.readAsDataURL(imageInput.files[0]);
+
+            if (store.editingProjectId) {
+                // EDIT MODE
+                const project = store.projects.find(p => p.id === store.editingProjectId);
+                if (!project) return;
+                project.title = title;
+                project.category = category;
+                project.description = description;
+                project.location = location;
+                if (imageInput.files && imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = evt => {
+                        project.image = evt.target.result;
+                        finishSave('Project updated successfully! ✦');
+                    };
+                    reader.readAsDataURL(imageInput.files[0]);
+                } else {
+                    finishSave('Project updated successfully! ✦');
+                }
             } else {
-                saveProject({title,category,description,location,image});
+                // ADD MODE
+                let image = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop';
+                if (imageInput.files && imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = evt => { image = evt.target.result; saveNewProject({title,category,description,location,image}); };
+                    reader.readAsDataURL(imageInput.files[0]);
+                } else {
+                    saveNewProject({title,category,description,location,image});
+                }
             }
         }
 
-        function saveProject(data) {
+        function saveNewProject(data) {
             store.projects.unshift({ id:Date.now(), ...data, year:new Date().getFullYear().toString(), status:'published' });
+            finishSave('Project added successfully! ✦');
+        }
+
+        function finishSave(message) {
+            store.editingProjectId = null;
             saveToStorage();
             renderProjects(store.currentFilter);
             router.updateDashboard();
             document.getElementById('addProjectForm').reset();
             document.getElementById('imagePreviewContainer').classList.add('hidden');
             document.getElementById('uploadPlaceholder').classList.remove('hidden');
-            showToast('Project added successfully! ✦', 'success');
+            document.getElementById('addProjectFormTitle').textContent = 'Add New Project';
+            document.getElementById('addProjectSubmitBtn').innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Save Project';
+            showToast(message, 'success');
             showAdminSection('projects');
+            lucide.createIcons();
         }
 
         function renderMessages() {
