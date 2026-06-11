@@ -1467,13 +1467,13 @@
                             <div class="space-y-4">
                                 <div>
                                     <label style="display:block;font-size:13px;font-weight:600;color:#6B6B6B;margin-bottom:8px">Current Password</label>
-                                    <input type="password" class="input-apple w-full px-4 py-3 rounded-xl bg-gray-50 text-gray-800 border">
+                                    <input type="password" id="settingsCurrentPass" class="input-apple w-full px-4 py-3 rounded-xl bg-gray-50 text-gray-800 border">
                                 </div>
                                 <div>
                                     <label style="display:block;font-size:13px;font-weight:600;color:#6B6B6B;margin-bottom:8px">New Password</label>
-                                    <input type="password" class="input-apple w-full px-4 py-3 rounded-xl bg-gray-50 text-gray-800 border">
+                                    <input type="password" id="settingsNewPass" class="input-apple w-full px-4 py-3 rounded-xl bg-gray-50 text-gray-800 border">
                                 </div>
-                                <button onclick="showToast('Password updated successfully','success')" class="btn-teal" style="display:inline-flex;align-items:center;padding:10px 24px;border-radius:10px;font-size:14px">
+                                <button onclick="updateAdminPassword()" class="btn-teal" style="display:inline-flex;align-items:center;padding:10px 24px;border-radius:10px;font-size:14px">
                                     Update Password
                                 </button>
                             </div>
@@ -1517,33 +1517,92 @@
             </div>
         </div>
     </div>
+    <!-- Firebase SDKs (Compat v10) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <script>
         // ─── INIT LUCIDE ───
         lucide.createIcons();
 
-        // ─── DATA ───
-        // Projects are stored permanently in this array.
-        // To add/edit/delete projects permanently for ALL visitors,
-        // edit this array and push to Vercel.
-        const permanentProjects = [
-            // Add your real projects here. Example format:
-            // { id:1, title:"Project Name", category:"residential", description:"...", location:"Ulikkal, Kannur", year:"2024", image:"https://...", status:"published" },
-        ];
+        // ─── FIREBASE CONFIG & INITIALIZATION ───
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvSX11jetE0fQu4-LFMX3E0r7HcuglyrE",
+            authDomain: "cube-innovative-web.firebaseapp.com",
+            projectId: "cube-innovative-web",
+            storageBucket: "cube-innovative-web.firebasestorage.app",
+            messagingSenderId: "153005098045",
+            appId: "1:153005098045:web:6091fecc4f6a9efe511654",
+            measurementId: "G-7DH9NKCCYX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const auth = firebase.auth();
 
-        // ─── STORAGE ───
-        function saveToStorage() {
-            localStorage.setItem('cube_projects', JSON.stringify(store.projects));
-            localStorage.setItem('cube_messages', JSON.stringify(store.messages));
+        // ─── PASSWORD HASHING UTILITY ───
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
-        function loadFromStorage() {
-            const p = localStorage.getItem('cube_projects');
-            const m = localStorage.getItem('cube_messages');
-            // Use localStorage if available, otherwise use permanent projects
-            return { projects: p ? JSON.parse(p) : [...permanentProjects], messages: m ? JSON.parse(m) : [] };
+
+        // ─── FILE UPLOAD UTILITY ───
+        async function uploadImage(file) {
+            const filename = Date.now() + '_' + file.name;
+            const ref = storage.ref().child('projects/' + filename);
+            const snapshot = await ref.put(file);
+            return await snapshot.ref.getDownloadURL();
         }
-        const saved = loadFromStorage();
-        const store = { projects: saved.projects, messages: saved.messages, currentUser: null, currentFilter: 'all', editingProjectId: null };
+
+        // ─── DATA STORE ───
+        const store = { projects: [], messages: [], currentUser: null, currentFilter: 'all', editingProjectId: null };
+
+        // ─── ASYNC FIREBASE DATA LOADING ───
+        async function initFirebaseData() {
+            try {
+                // 1. Fetch or initialize Admin credentials
+                const adminDoc = await db.collection('settings').doc('admin').get();
+                if (!adminDoc.exists) {
+                    const defaultPasswordHash = await sha256('admin123');
+                    await db.collection('settings').doc('admin').set({
+                        username: 'admin',
+                        passwordHash: defaultPasswordHash
+                    });
+                }
+
+                // 2. Fetch Projects from Firestore
+                const projectsSnapshot = await db.collection('projects').get();
+                const fetchedProjects = [];
+                projectsSnapshot.forEach(doc => {
+                    fetchedProjects.push({ ...doc.data(), firestoreId: doc.id });
+                });
+                fetchedProjects.sort((a,b) => (b.id || 0) - (a.id || 0));
+                store.projects = fetchedProjects;
+
+                // 3. Fetch Messages from Firestore
+                const messagesSnapshot = await db.collection('messages').get();
+                const fetchedMessages = [];
+                messagesSnapshot.forEach(doc => {
+                    fetchedMessages.push({ ...doc.data(), firestoreId: doc.id });
+                });
+                fetchedMessages.sort((a,b) => new Date(b.date) - new Date(a.date));
+                store.messages = fetchedMessages;
+
+                // Render lists
+                renderProjects(store.currentFilter);
+                router.updateDashboard();
+            } catch (err) {
+                console.error("Error loading database:", err);
+                showToast("Connection error. Using cached/empty store.", "error");
+            }
+        }
+
+        // ─── STORAGE (COMPATIBILITY NO-OP) ───
+        function saveToStorage() {}
 
         // ─── ROUTER ───
         const router = {
@@ -1679,10 +1738,15 @@
         }
 
         // ─── CONTACT ───
-        function handleContactSubmit(e) {
+        async function handleContactSubmit(e) {
             e.preventDefault();
             const fd = new FormData(e.target);
-            store.messages.unshift({
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Sending...';
+
+            const newMessage = {
                 id: Date.now(),
                 name: (fd.get('firstName')||'') + ' ' + (fd.get('lastName')||''),
                 email: fd.get('email'),
@@ -1691,11 +1755,23 @@
                 message: fd.get('message'),
                 date: new Date().toISOString(),
                 read: false
-            });
-            saveToStorage();
-            showToast('Message sent! We will contact you soon. ✦', 'success');
-            e.target.reset();
-            router.updateDashboard();
+            };
+
+            try {
+                const docRef = await db.collection('messages').add(newMessage);
+                newMessage.firestoreId = docRef.id;
+                store.messages.unshift(newMessage);
+                showToast('Message sent! We will contact you soon. ✦', 'success');
+                e.target.reset();
+                router.updateDashboard();
+            } catch (err) {
+                console.error("Error sending message:", err);
+                showToast("Failed to send message: " + err.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
+            }
         }
 
         // ─── TOAST ───
@@ -1715,16 +1791,46 @@
         }
 
         // ─── ADMIN ───
-        function handleAdminLogin(e) {
+        async function handleAdminLogin(e) {
             e.preventDefault();
             const u = document.getElementById('adminUsername').value;
             const p = document.getElementById('adminPassword').value;
-            if (u === 'admin' && p === 'admin123') {
-                store.currentUser = { username: u, role: 'admin' };
-                showToast('Welcome back, Administrator! ✦', 'success');
-                router.navigate('admin-dashboard');
-            } else {
-                showToast('Invalid credentials', 'error');
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Signing In...';
+
+            try {
+                const adminDoc = await db.collection('settings').doc('admin').get();
+                let valid = false;
+
+                if (adminDoc.exists) {
+                    const data = adminDoc.data();
+                    const inputHash = await sha256(p);
+                    if (data.username === u && data.passwordHash === inputHash) {
+                        valid = true;
+                    }
+                } else {
+                    if (u === 'admin' && p === 'admin123') {
+                        valid = true;
+                    }
+                }
+
+                if (valid) {
+                    store.currentUser = { username: u, role: 'admin' };
+                    showToast('Welcome back, Administrator! ✦', 'success');
+                    router.navigate('admin-dashboard');
+                } else {
+                    showToast('Invalid credentials', 'error');
+                }
+            } catch (err) {
+                console.error("Login error:", err);
+                showToast("Connection error during login: " + err.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
             }
         }
 
@@ -1807,14 +1913,34 @@
             return { residential:'background:rgba(200,146,42,0.12);color:#C8922A', commercial:'background:rgba(30,107,122,0.1);color:#1e6b7a', kitchen:'background:rgba(249,115,22,0.1);color:#f97316' }[cat] || 'background:#f0f0f0;color:#6B6B6B';
         }
 
-        function deleteProject(id) {
+        async function deleteProject(id) {
             if (confirm('Delete this project?')) {
-                store.projects = store.projects.filter(p => p.id !== id);
-                saveToStorage();
-                renderProjectsTable();
-                renderProjects(store.currentFilter);
-                router.updateDashboard();
-                showToast('Project deleted', 'success');
+                try {
+                    const project = store.projects.find(p => p.id === id);
+                    if (!project) return;
+
+                    if (project.firestoreId) {
+                        await db.collection('projects').doc(project.firestoreId).delete();
+                    }
+
+                    if (project.image && project.image.includes('firebasestorage.googleapis.com')) {
+                        try {
+                            const storageRef = firebase.storage().refFromURL(project.image);
+                            await storageRef.delete();
+                        } catch (storageErr) {
+                            console.warn("Storage image delete failed:", storageErr);
+                        }
+                    }
+
+                    store.projects = store.projects.filter(p => p.id !== id);
+                    renderProjectsTable();
+                    renderProjects(store.currentFilter);
+                    router.updateDashboard();
+                    showToast('Project deleted', 'success');
+                } catch (err) {
+                    console.error("Error deleting project:", err);
+                    showToast("Failed to delete project: " + err.message, "error");
+                }
             }
         }
 
@@ -1855,6 +1981,47 @@
             lucide.createIcons();
         }
 
+        async function updateAdminPassword() {
+            const currentPass = document.getElementById('settingsCurrentPass').value;
+            const newPass = document.getElementById('settingsNewPass').value;
+
+            if (!currentPass || !newPass) {
+                showToast("Please fill in both current and new passwords", "error");
+                return;
+            }
+
+            try {
+                const currentHash = await sha256(currentPass);
+                const adminDoc = await db.collection('settings').doc('admin').get();
+
+                if (adminDoc.exists) {
+                    const data = adminDoc.data();
+                    if (data.passwordHash !== currentHash) {
+                        showToast("Incorrect current password", "error");
+                        return;
+                    }
+                } else {
+                    if (currentPass !== 'admin123') {
+                        showToast("Incorrect current password", "error");
+                        return;
+                    }
+                }
+
+                const newHash = await sha256(newPass);
+                await db.collection('settings').doc('admin').set({
+                    username: 'admin',
+                    passwordHash: newHash
+                });
+
+                document.getElementById('settingsCurrentPass').value = '';
+                document.getElementById('settingsNewPass').value = '';
+                showToast("Password updated successfully! ✦", "success");
+            } catch (err) {
+                console.error("Password update error:", err);
+                showToast("Failed to update password: " + err.message, "error");
+            }
+        }
+
         function cancelEditProject() {
             store.editingProjectId = null;
             document.getElementById('addProjectForm').reset();
@@ -1866,7 +2033,7 @@
             showAdminSection('projects');
         }
 
-        function handleAddProject(e) {
+        async function handleAddProject(e) {
             e.preventDefault();
             const title = document.getElementById('projTitle').value;
             const category = document.getElementById('projCategory').value;
@@ -1874,45 +2041,76 @@
             const location = document.getElementById('projLocation').value || 'Ulikkal, Kannur';
             const imageInput = document.getElementById('projImage');
 
-            if (store.editingProjectId) {
-                // EDIT MODE
-                const project = store.projects.find(p => p.id === store.editingProjectId);
-                if (!project) return;
-                project.title = title;
-                project.category = category;
-                project.description = description;
-                project.location = location;
-                if (imageInput.files && imageInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = evt => {
-                        project.image = evt.target.result;
-                        finishSave('Project updated successfully! ✦');
-                    };
-                    reader.readAsDataURL(imageInput.files[0]);
-                } else {
-                    finishSave('Project updated successfully! ✦');
-                }
-            } else {
-                // ADD MODE
-                let image = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop';
-                if (imageInput.files && imageInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = evt => { image = evt.target.result; saveNewProject({title,category,description,location,image}); };
-                    reader.readAsDataURL(imageInput.files[0]);
-                } else {
-                    saveNewProject({title,category,description,location,image});
-                }
-            }
-        }
+            const submitBtn = document.getElementById('addProjectSubmitBtn');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"></path></svg> Saving...';
 
-        function saveNewProject(data) {
-            store.projects.unshift({ id:Date.now(), ...data, year:new Date().getFullYear().toString(), status:'published' });
-            finishSave('Project added successfully! ✦');
+            try {
+                let imageUrl = '';
+
+                if (store.editingProjectId) {
+                    // EDIT MODE
+                    const project = store.projects.find(p => p.id === store.editingProjectId);
+                    if (!project) throw new Error("Project not found");
+
+                    imageUrl = project.image;
+
+                    if (imageInput.files && imageInput.files[0]) {
+                        imageUrl = await uploadImage(imageInput.files[0]);
+                    }
+
+                    project.title = title;
+                    project.category = category;
+                    project.description = description;
+                    project.location = location;
+                    project.image = imageUrl;
+
+                    await db.collection('projects').doc(project.firestoreId).update({
+                        title,
+                        category,
+                        description,
+                        location,
+                        image: imageUrl
+                    });
+
+                    finishSave('Project updated successfully! ✦');
+                } else {
+                    // ADD MODE
+                    imageUrl = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop';
+                    if (imageInput.files && imageInput.files[0]) {
+                        imageUrl = await uploadImage(imageInput.files[0]);
+                    }
+
+                    const newProj = {
+                        id: Date.now(),
+                        title,
+                        category,
+                        description,
+                        location,
+                        image: imageUrl,
+                        year: new Date().getFullYear().toString(),
+                        status: 'published'
+                    };
+
+                    const docRef = await db.collection('projects').add(newProj);
+                    newProj.firestoreId = docRef.id;
+
+                    store.projects.unshift(newProj);
+                    finishSave('Project added successfully! ✦');
+                }
+            } catch (err) {
+                console.error("Error saving project:", err);
+                showToast("Failed to save project: " + err.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
+            }
         }
 
         function finishSave(message) {
             store.editingProjectId = null;
-            saveToStorage();
             renderProjects(store.currentFilter);
             router.updateDashboard();
             document.getElementById('addProjectForm').reset();
@@ -1963,17 +2161,40 @@
             lucide.createIcons();
         }
 
-        function markAsRead(id) {
+        async function markAsRead(id) {
             const msg = store.messages.find(m => m.id === id);
-            if (msg) { msg.read = true; saveToStorage(); renderMessages(); }
+            if (msg) {
+                try {
+                    msg.read = true;
+                    if (msg.firestoreId) {
+                        await db.collection('messages').doc(msg.firestoreId).update({ read: true });
+                    }
+                    renderMessages();
+                } catch (err) {
+                    console.error("Error updating message:", err);
+                    showToast("Failed to update message: " + err.message, "error");
+                }
+            }
         }
 
-        function deleteMessage(id) {
+        async function deleteMessage(id) {
             if (confirm('Delete this message?')) {
-                store.messages = store.messages.filter(m => m.id !== id);
-                saveToStorage();
-                renderMessages();
-                router.updateDashboard();
+                try {
+                    const msg = store.messages.find(m => m.id === id);
+                    if (!msg) return;
+
+                    if (msg.firestoreId) {
+                        await db.collection('messages').doc(msg.firestoreId).delete();
+                    }
+
+                    store.messages = store.messages.filter(m => m.id !== id);
+                    renderMessages();
+                    router.updateDashboard();
+                    showToast('Message deleted', 'success');
+                } catch (err) {
+                    console.error("Error deleting message:", err);
+                    showToast("Failed to delete message: " + err.message, "error");
+                }
             }
         }
 
@@ -2005,9 +2226,8 @@
             // Hide all admin sections initially
             document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
 
-            // Render projects
-            renderProjects();
-            lucide.createIcons();
+            // Initialize Firebase Data & render projects
+            initFirebaseData();
 
             // Observe reveal elements
             document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger').forEach(el => {
